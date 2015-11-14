@@ -48,8 +48,8 @@ class Data implements Comparable<Data> {
 
 public class Main {
     
-    public static final int GRAPHSIZE = 10;
-    public static final int EDGE_NO = 20;
+    public static final int GRAPHSIZE = 5;
+    public static final int EDGE_NO = 8;
     public static final int STARTNODE = 132;
     public static final int ENDNODE = 2;
     public static final int DP = 4;
@@ -62,7 +62,7 @@ public class Main {
     public static ArrayList<Double> gbest;
     static int MAX_VERTS = 50000;
     public static Particle dummyParticle;
-    public static ArrayList<ArrayList<Pair<Integer, Integer>>> GRAPH; // = new int[][]{
+    public static ArrayList<ArrayList<ArrayList<Pair<Double, Integer>>>> GRAPH; // = new int[][]{
 //        {0, 2, 4, 0, 0, 0, 0},
 //        {2, 0, 0, 8, 3, 0, 0},
 //        {4, 0, 0, 6, 0, 9, 0},
@@ -171,11 +171,11 @@ public class Main {
             int pso = (int) dummyParticle.getPathCost(bestPath);
             String output = "Path: " + bestPath + " Fitness: " + pso;
             System.out.println("PSO: " + pso);
-            int dijkstra = dijkstra(GRAPH, STARTNODE, ENDNODE);
+            //int dijkstra = dijkstra(GRAPH, STARTNODE, ENDNODE);
                     
-            System.out.println("Dijkstra: " + dijkstra);
-            if(dijkstra == pso)
-                accuracy++;
+            //System.out.println("Dijkstra: " + dijkstra);
+//            if(dijkstra == pso)
+//                accuracy++;
             gBests.add(output);
         }
 //        for(String out: gBests){
@@ -234,44 +234,52 @@ public class Main {
     
     public static ArrayList<ArrayList<ArrayList<Pair<Double, Integer>>>> randGraph() {
         ArrayList<ArrayList<ArrayList<Pair<Double, Integer>>>> g = new ArrayList<>(GRAPHSIZE);
+        for (int i = 0; i < GRAPHSIZE ; i++) {
+            ArrayList<ArrayList<Pair<Double, Integer>>> row = new ArrayList<>();
+            for (int j = 0; j < GRAPHSIZE; j++) {
+                ArrayList<Pair<Double, Integer>> pairList = new ArrayList<>();
+                pairList.add(new Pair(-1.0, 1));
+                row.add(pairList);
+            }
+            g.add(row);
+        }
         int edgeCount = 0;
         int counter = 0;
         int cost = 0;
         for (int i = 0; i < GRAPHSIZE; i++) {
-            ArrayList<ArrayList<Pair<Double, Integer>>> dum = new ArrayList<>(GRAPHSIZE);
-            for (int j = 0; j < GRAPHSIZE; j++){
-                int distSize = 1 + rand.nextInt(5);
-                ArrayList<Double> distribution = generateDistribution(distSize, 100);
-                System.out.println(distribution);
-                ArrayList<Pair<Double, Integer>> costProb = new ArrayList<>();
-                for (int k = 0; k < distribution.size(); k++){
-                    costProb.add(new Pair<>(distribution.get(k), 10 + rand.nextInt(1000)));
-                }
-                dum.add(costProb);
-                counter++;
+            int j = rand.nextInt(GRAPHSIZE);
+            int distSize = 1 + rand.nextInt(5);
+            ArrayList<Double> distribution = generateDistribution(distSize, 100);
+            ArrayList<Pair<Double, Integer>> costProb = new ArrayList<>();
+            for (int k = 0; k < distribution.size(); k++) {
+                costProb.add(new Pair<>(distribution.get(k), 10 + rand.nextInt(1000)));
             }
-            g.add(dum);
+            g.get(i).set(j, costProb);
+            counter++;
             if (counter == EDGE_NO) {
                 break;
             }
         }
-//        for (;;) {
-//            int i = rand.nextInt(GRAPHSIZE);
-//            int j = rand.nextInt(GRAPHSIZE);
-//            if (i == j) {
-//                continue;
-//            }
-//            if (g[i][j] == 0) {
-//                cost = 10 + rand.nextInt(1000);
-//                g[i][j] = cost;
-//                g[j][i] = cost;
-//                counter++;
-//            }
-//            if (counter == EDGE_NO) {
-//                break;
-//            }
-//        }
-
+        for (;;) {
+            int i = rand.nextInt(GRAPHSIZE);
+            int j = rand.nextInt(GRAPHSIZE);
+            if (i == j) {
+                continue;
+            }
+            if (g.get(i).get(j).get(0).getKey() < 0.0) {
+                int distSize = 1 + rand.nextInt(5);
+                ArrayList<Double> distribution = generateDistribution(distSize, 100);
+                ArrayList<Pair<Double, Integer>> costProb = new ArrayList<>();
+                for (int k = 0; k < distribution.size(); k++){
+                    costProb.add(new Pair<>(distribution.get(k), 10 + rand.nextInt(1000)));
+                }
+                g.get(i).set(j, costProb);
+                counter++;
+            }
+            if (counter == EDGE_NO) {
+                break;
+            }
+        }
         return g;
     }
     
