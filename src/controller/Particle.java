@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Stack;
 import com.rits.cloning.Cloner;
+import javafx.util.Pair;
 
 public class Particle {
 	
@@ -127,39 +128,51 @@ public class Particle {
         Iterator<Integer> i = path.iterator();
         int from = i.next();
         while (i.hasNext()){
+            //System.out.println("in while");
             int to = i.next();
-            pathCost += Main.GRAPH[from][to];
+            ArrayList<Pair<Double, Integer>> costDistribution = Main.GRAPH.get(from).get(to);
+            pathCost += getDistCost(costDistribution);
             from = to;
         }
+        //System.out.println("out of while");
         return pathCost;
+    }
+    
+    public static double getDistCost(ArrayList<Pair<Double, Integer>> dist){
+        double distCost = 0;
+        for (int j = 0; j < dist.size(); j++) {
+                distCost += dist.get(j).getKey() * dist.get(j).getValue();
+            }
+        //System.out.println("distCost: " + distCost);
+        return distCost;
     }
     public Stack<Integer> path;
     
     public Stack<Integer> decodePath(ArrayList<Double> biases){
         int start = Main.STARTNODE;
         int end = Main.ENDNODE;
-        Integer[][] graph = new Integer[Main.GRAPHSIZE][Main.GRAPHSIZE];
-        for (int i = 0; i < graph.length; i++) {
-            for (int j = 0; j < graph.length; j++) {
-                graph[i][j] = Main.GRAPH[i][j];
-            }
-        }
+        ArrayList<ArrayList<ArrayList<Pair<Double, Integer>>>> graph = Main.GRAPH;
         path = new Stack<>();
         int currNode = start;
         path.push(currNode);
-        for (int i = 0; i < graph.length; i++) {
-            graph[i][currNode] = 0;
-        }
+        ArrayList<Integer> invalid = new ArrayList<>();
+//        for (int i = 0; i < Main.GRAPHSIZE; i++) {
+//            graph[i][currNode] = 0;
+//        }
         while(true){
+            //System.out.println("inwhile: decodePath");
             double minBiasedCost = Double.MAX_VALUE;
             int nextNode = currNode;
             
+            
+            
             // Select node with least biased cost from adjacent nodes
-            for (int i = 0; i < graph[currNode].length; i++) {
-                if (graph[currNode][i] == 0)
+            for (int i = 0; i < Main.GRAPHSIZE; i++) {
+                if (invalid.contains(i) || path.contains(i) || Main.GRAPH.get(currNode).get(i).get(0).getKey() < 0)
                     continue;
                 // Bias edge cost by weight values of both nodes adjacent to it
-                double biasedCost = biases.get(currNode) * biases.get(i) * graph[currNode][i];
+                double biasedCost = biases.get(currNode) * biases.get(i) 
+                        * getDistCost(Main.GRAPH.get(currNode).get(i));
                 // Get edge with minimum biased cost
                 if(biasedCost < minBiasedCost){
                     nextNode = i;
@@ -176,22 +189,24 @@ public class Particle {
             // Check for pedantic (dead end) node and backtrack if true
             if(minBiasedCost == Double.MAX_VALUE){
                 int prevNode = path.pop();
-                graph[prevNode][currNode] = 0;
-                graph[currNode][prevNode] = 0;
+                invalid.add(prevNode);
+//                graph[prevNode][currNode] = 0;
+//                graph[currNode][prevNode] = 0;
                 currNode = path.peek();
                 continue;
             }
             
             // Clear out the costs at nextNode's column of the adj matrix to 
             // prevent duplication of nodes in path
-            for (int i = 0; i < graph.length; i++) {
-                graph[i][nextNode] = 0;
-            }
-            graph[nextNode][currNode] = 0;
+//            for (int i = 0; i < graph.length; i++) {
+//                graph[i][nextNode] = 0;
+//            }
+//            graph[nextNode][currNode] = 0;
             
             currNode = nextNode;
             path.push(currNode);
         }
+        //System.out.println("out of while: decode path");
         return path;
     }
     @Override

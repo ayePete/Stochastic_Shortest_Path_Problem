@@ -50,14 +50,14 @@ public class Main {
     
     public static final int GRAPHSIZE = 5;
     public static final int EDGE_NO = 8;
-    public static final int STARTNODE = 132;
+    public static final int STARTNODE = 3;
     public static final int ENDNODE = 2;
     public static final int DP = 4;
     public static Cloner cloner = new Cloner();
 
     public static double c1 = 1.48;
     public static double c2 = 0.5;
-    public static Random rand = new Random();
+    public static Random rand = new Random(500);
     public static ArrayList<Particle> swarm;
     public static ArrayList<Double> gbest;
     static int MAX_VERTS = 50000;
@@ -167,8 +167,8 @@ public class Main {
                 computeGBest();
             }
             Stack<Integer> bestPath = dummyParticle.decodePath(gbest);
-            
-            int pso = (int) dummyParticle.getPathCost(bestPath);
+            System.out.println("bestPat: " + bestPath);
+            double pso = dummyParticle.getPathCost(bestPath);
             String output = "Path: " + bestPath + " Fitness: " + pso;
             System.out.println("PSO: " + pso);
             //int dijkstra = dijkstra(GRAPH, STARTNODE, ENDNODE);
@@ -194,7 +194,8 @@ public class Main {
     }
 
     private static void init() {
-        //GRAPH = randGraph();
+        GRAPH = randGraph();
+        System.out.println(GRAPH);
         //System.out.println(Arrays.deepToString(GRAPH));
         swarm = new ArrayList<>();
         for (int i = 0; i < GRAPHSIZE/2; i++) {
@@ -248,6 +249,8 @@ public class Main {
         int cost = 0;
         for (int i = 0; i < GRAPHSIZE; i++) {
             int j = rand.nextInt(GRAPHSIZE);
+            if(i == j)
+                continue;
             int distSize = 1 + rand.nextInt(5);
             ArrayList<Double> distribution = generateDistribution(distSize, 100);
             ArrayList<Pair<Double, Integer>> costProb = new ArrayList<>();
@@ -255,6 +258,7 @@ public class Main {
                 costProb.add(new Pair<>(distribution.get(k), 10 + rand.nextInt(1000)));
             }
             g.get(i).set(j, costProb);
+            g.get(j).set(i, costProb);
             counter++;
             if (counter == EDGE_NO) {
                 break;
@@ -274,6 +278,7 @@ public class Main {
                     costProb.add(new Pair<>(distribution.get(k), 10 + rand.nextInt(1000)));
                 }
                 g.get(i).set(j, costProb);
+                g.get(j).set(i, costProb);
                 counter++;
             }
             if (counter == EDGE_NO) {
@@ -346,15 +351,15 @@ public class Main {
         ArrayList<Double> result = cloner.deepClone(prevVal);
         ArrayList<Double> prospective = cloner.deepClone(prevVal);
         ArrayList<Double> z = new ArrayList<>();
-        for (int i = 0; i < GRAPH.length; i++) {
+        for (int i = 0; i < GRAPHSIZE; i++) {
             z.add(rand.nextDouble() * 3);
         }
         //System.out.println("Previous: " + prevVal);
         
         for (int i = 0; i < 10; i++) {
             prevVal = (ArrayList) prospective.clone();
-            int index = rand.nextInt(GRAPH.length);
-            for (int j = 0; j < GRAPH.length; j++) {
+            int index = rand.nextInt(GRAPHSIZE);
+            for (int j = 0; j < GRAPHSIZE; j++) {
                 prob = rand.nextInt(2);
                 //System.out.println(index);
                 if(prob == 0)
@@ -368,7 +373,7 @@ public class Main {
             double fitness = dummyParticle.getPathCost(dummyParticle.decodePath(prospective));
             //System.out.println("Min: " + min + " MemFitness: " + fitness);
             if (fitness > min) {
-                for (int j = 0; j < GRAPH.length; j++) {
+                for (int j = 0; j < GRAPHSIZE; j++) {
                     z.set(j, rand.nextDouble() * 3);
                 }
                 gamma -= 0.01;
@@ -379,8 +384,6 @@ public class Main {
                 result = cloner.deepClone(prospective);
             }
         }
-         //System.out.println("End of memetic. \n");
-        
         return result;
     }
     
